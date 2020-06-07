@@ -1,0 +1,22 @@
+FROM golang:1.14 as build
+
+ENV GOBIN=/go/bin
+ENV GOPATH=/go/src/app/database 
+
+WORKDIR /go/src/app
+COPY . .
+
+RUN go get -u github.com/gofiber/fiber
+RUN go get -u github.com/jinzhu/gorm
+RUN go get -u github.com/jinzhu/gorm/dialects/postgres
+
+WORKDIR /go/src/app/database
+RUN go install database.go
+
+FROM debian:buster
+
+RUN mkdir -p /go/bin
+COPY --from=build /go/bin/* /go/bin/
+
+EXPOSE 3000
+ENTRYPOINT ["/go/bin/database"]

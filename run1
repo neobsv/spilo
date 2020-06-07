@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+exec 2>&1
+exec env -i /bin/etcd --data-dir /tmp/etcd.data --name postgres1 --initial-advertise-peer-urls http://postgres1:2380 --listen-peer-urls http://0.0.0.0:2380 --initial-cluster postgres0=http://postgres0:2380,postgres1=http://postgres1:2380,postgres2=http://postgres2:2380 --initial-cluster-state new --initial-cluster-token etcd-cluster-1 --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'

@@ -1,0 +1,71 @@
+scope: postgres
+namespace: /db/
+name: postgresql1
+
+restapi:
+    listen: 0.0.0.0:8008
+    connect_address: postgres1:8008
+
+etcd:
+    hosts: postgres0:2379,postgres1:2379,postgres2:2379
+
+bootstrap:
+    dcs:
+        ttl: 30
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 33554432
+        postgresql:
+            parameters:
+                archive_mode: 'off'
+                autovacuum_analyze_scale_factor: 0.02
+                autovacuum_max_workers: 5
+                autovacuum_vacuum_scale_factor: 0.05
+                checkpoint_completion_target: 0.9
+                hot_standby: 'on'
+                max_connections: 256
+                max_replication_slots: 10
+                max_wal_senders: 10
+                tcp_keepalives_idle: 900
+                tcp_keepalives_interval: 100
+                # track_functions: all
+                wal_keep_segments: 32
+                wal_level: 'replica'
+                wal_log_hints: 'on'
+            use_pg_rewind: true
+            use_slots: true
+
+    initdb:
+        - encoding: UTF8
+        - data-checksums
+
+    pg_hba:
+    - host replication replication 0.0.0.0/0 md5
+    - host all all 0.0.0.0/0 md5
+
+    users:
+        admin:
+            password: admin
+            options:
+                - createrole
+                - createdb
+
+postgresql:
+    listen: 0.0.0.0:5432
+    connect_address: postgres1:5432
+    data_dir: /var/lib/postgresql/data
+    authentication:
+        replication:
+            username: replication
+            password: password
+        superuser:
+            username: postgres
+            password: password
+        rewind:  # Has no effect on postgres 10 and lower
+            username: rewind_user
+            password: rewind_password
+
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
